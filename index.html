@@ -1,78 +1,305 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8'>
+    <meta charset='utf-8'>
 
-  <title>FlamingTempura/greasy.js @ GitHub</title>
+    <title>FlamingTempura/greasy.js @ GitHub</title>
 
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #be8d80;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #000000;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #41727f; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #41727f; }
-    h3 { text-align: center; color: #41727f; }
-    a { color: #41727f; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
+    <script type="text/javascript" src="sh_main.js"></script>
+    <script type="text/javascript" src="sh_html.js"></script>
+    <script type="text/javascript" src="sh_javascript.js"></script>
+
+    <link type="text/css" rel="stylesheet" href="sh_style.css">
+
+    <style>
+        body {
+          font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, FreeSerif, serif;
+          font-size: 15px;
+          line-height: 22px;
+          color: #252519;
+          margin: 50px 0 50px 50px;
+          padding: 0;
+          width: 700px;
+        }
+        a, a:visited {
+          color: #7A2E1F;
+        }
+        p {
+          margin: 0 0 15px 0;
+        }
+        h1, h2, h3, h4, h5, h6 {
+          margin: 0px 0 15px 0;
+        }
+          h1 {
+            padding: 10px 0 20px 0;
+          }
+        
+        pre, tt, code {
+            font-size: 12px;
+            line-height: 18px;
+            font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
+            margin: 0;
+            padding: 4px 0px 4px 10px;
+            border-left: 5px solid #e7e7e7;
+        }
+
+        pre.inline {
+            border: 0;
+            display: inline;
+            padding: 0;
+        }
+
+        dt {
+            font-style: italic;
+        }
+
+        .download {
+            float: right;
+        }
+
+    </style>
 </head>
+<body onload="sh_highlightDocument();">
 
-<body>
-  <a href="http://github.com/FlamingTempura/greasy.js"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+<div class="download">
+  <a href="http://github.com/FlamingTempura/greasy.js/zipball/master">
+    <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
+  <a href="http://github.com/FlamingTempura/greasy.js/tarball/master">
+    <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+</div>
 
-  <div id="container">
+<h1>greasy.js</h1>
+<a href="http://github.com/FlamingTempura/greasy.js"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
 
-    <div class="download">
-      <a href="http://github.com/FlamingTempura/greasy.js/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/FlamingTempura/greasy.js/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
-
-    <h1><a href="http://github.com/FlamingTempura/greasy.js">greasy.js</a>
-      <span class="small">by <a href="http://github.com/FlamingTempura">FlamingTempura</a></span></h1>
-
-    <div class="description">
-      Dependancy framework for JavaScript
-    </div>
-
-    <h2>Dependencies</h2>
-<p>jQuery
-underscore.js</p>
-<h2>Authors</h2>
-<p>Peter West</p>
+<h2>JavaScript dependency framework</h2>
 
 
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/FlamingTempura/greasy.js/zipball/master">zip</a> or
-      <a href="http://github.com/FlamingTempura/greasy.js/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/FlamingTempura/greasy.js</pre>
-    </p>
+<p>greasy.js allows you to separate your JavaScript-heavy application into components, which may be dependant on other components. This allows:
+<ul>
+    <li>Mitigating the use of large multi-purpose JavaScript files - instead you can keep each part (<em>component</em>) of your application in separate files,</li>
+    <li>Reducing the need for HTML &lt;script&gt; tags - JavaScript components are loaded dynamically,</li>
+    <li>Facilitating lazy-loading - only load components if and when they are needed.</li>
+</ul></p>
 
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/FlamingTempura/greasy.js">FlamingTempura/greasy.js</a>
-    </div>
+<p>Requires <a href="http://jquery.com/">jQuery</a> and <a href="http://documentcloud.github.com/underscore/">underscore.js</a>.</p>
 
-  </div>
+<ul class="menu">
+    <li><a href="#download">Download<a></li>
+    <li><a href="https://github.com/FlamingTempura/greasy.js">Hosted on GitHub</a></li>
+    <!-- <li><a>Annotated source code</a></li> -->
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#api">API</a></li>
+    <!-- <li><a href="#example">Example use</a></li> -->
+    <li><a href="#about">About</a></li>
+    <li><a href="https://github.com/FlamingTempura/greasy.js/issues">Issues, bug reports and discussions</a></li>
+</ul>
 
-  
-</body>
-</html>
+<a name="download"></a><h3>Download</h3>
+<p>
+  You can download this project in either
+  <a href="http://github.com/FlamingTempura/greasy.js/zipball/master">zip</a> or
+  <a href="http://github.com/FlamingTempura/greasy.js/tarball/master">tar</a> formats.
+</p>
+<p>You can also clone the project with <a href="http://git-scm.com">Git</a>
+  by running:
+  <pre>$ git clone git://github.com/FlamingTempura/greasy.js</pre>
+</p>
+
+<a name="usage"></a><h3>Usage</h3>
+
+<p>Include greasy.js. greasy requires jQuery and underscore too.
+<pre class="sh_html">
+&lt;script src="jquery.js"&gt;&lt;/script&gt;
+&lt;script src="underscore.js"&gt;&lt;/script&gt;
+
+&lt;script src="greasy.js"&gt;&lt;/script&gt;
+</pre>
+</p>
+
+<p>Create a greasy object:
+<pre class="sh_html">var greasy = new Greasy();</pre>
+or
+<pre class="sh_javascript">var greasy = Greasy.create();</pre></p>
+
+<p>Register your components with greasy:
+<pre class="sh_javascript">
+greasy.registerComponents({
+    "Mammal": "Mammel.js",
+    "Human": "Human.js"
+});
+</pre></p>
+
+<p>Define a component:
+<pre class="sh_javascript">
+window.animalLibrary.greasy.defineComponent(
+    "Mammal",
+    function (imports) {
+        "use strict";
+        var $ = imports.$;
+
+        return {
+            hasSpine: function () {
+                return true;
+            },
+
+            greeting: function () {
+                return "Not sure...";
+            },
+
+            draw: function () {
+                $(".animal").html("Mammal says " + 
+                    this.greeting());
+            }
+        };
+    }
+);
+</pre></p>
+
+<a name="api"></a><h3>API</h3>
+
+<h4>Contents</h4>
+<h5>Greasy Constructor</h5>
+<p><a href="#Greasy.create">create</a></p>
+
+<h5>Greasy Object</h5>
+<p><a href="#setImports">setImports</a>, <a href="#registerComponents">registerComponents</a>, <a href="#get">get</a>, <a href="#requireComponents">requireComponents</a>, <a href="#defineComponent">defineComponent</a></p>
+
+<h5>Greasy Component</h5>
+<p><a href="#Component.create">create</a></p>
+
+<h4>Greasy Constructor</h4>
+<dl>
+    <dt><a name="Greasy.create"></a>Greasy.create(arguments)</dt>
+        <dd>creates a Greasy object. Same as calling <pre class="inline sh_javascript">new Greasy(arguments)</pre></dd>
+</dl>
+
+<h4>Greasy Object</h4>
+<dl>
+    <dt><a name="setImports"></a>setImports(imports)</dt>
+        <dd><dl>
+            <dt>imports
+                <dd>object that is given to all callbacks in requireComponents and defineComponent.</dd>
+            </dl>
+            <p>Callbacks on requireComponents and defineComponent are given imports as an argument. This allows those functions to access variables that would otherwise have to be global. imports.greasy is always available for access to the greasy object.</p>
+            <p>Example:
+<pre class="sh_javascript">
+// Provide access to jQuery and underscore objects
+greasy.setImports({
+    jQuery: jQuery,
+    _, _
+});
+</pre>
+            </p></dd>
+
+    <dt><a name="registerComponents"></a>registerComponents(components)</dt>
+        <dd><dl>
+            <dt>components</dt>
+                <dd>object of component-names to the filenames that they are defined in.</dd>
+            </dl>
+            <p>Register mappings of component-names to the filenames that they are defined in.</p>
+            <p>Example:
+<pre class="sh_javascript">
+greasy.registerComponents({
+    "Mammal": "Mammel.js",
+    "Human": "Human.js"
+});</pre>
+            </p></dd>
+
+    <dt><a name="get"></a>get(componentName)</dt>
+        <dd>
+            <p>Get the component constructor for the given component name.</p>
+            <p>Example:
+<pre class="sh_javascript">
+var Human = greasy.get("Human"),
+    mike = Human.create("Mike");
+</pre>
+            </p></dd>
+
+    <dt><a name="requireComponents"></a>requireComponents(components, callback)</dt>
+        <dd><dl>
+            <dt>components</dt>
+                <dd>array of componentNames of components that will be required within the callback</dd>
+            <dt>callback</dt>
+                <dd>function to be called once all components have loaded and executed</dd>
+            </dl>
+        <p>Example:
+<pre class="sh_javascript">
+greasy.requireComponents(
+    ["Mammal"],
+    function (imports) {
+        var greasy = imports.greasy,
+            Mammal = greasy.get("Mammal"),
+            mammal = Mammal.create();
+    }
+);
+</pre></p>
+</dd>
+
+    <dt><a name="defineComponent"></a>defineComponent(componentName, options, callback)</dt>
+        <dd><dl>
+            <dt>componentName<dt>
+                <dd>name of the component that is to be defined</dd>
+            <dt>options</dt>
+                <dd>object containing any of the following options:
+                <dl>
+                    <dt>require</dt><dd>array of other components that will be required
+                    <dt>extend</dt><dd>a class that the class should extend on</dd>
+                </dl>
+                </dd>
+            <dt>callback</dt>
+                <dd>function to be called once requirements have been fulfilled. Must return an object to be used as the prototype for the components constructor.</dd>
+            </dl>
+
+        <p>Example:
+<pre class="sh_javascript">
+greasy.defineComponent(
+    "Human",
+    {
+        require: ["Thumb"],
+        extend: "Mammal"
+    },
+    function (imports) {
+        "use strict";
+        var $ = imports.$,
+            greasy = imports.greasy,
+            Thumb = greasy.get("Thumb"),
+            thumb1 = Thumb.create({ name: "Thumb 1" }),
+            thumb2 = Thumb.create({ name: "Thumb 2" });
+
+        return {
+            greeting: function () {
+                return "Hello World!&lt;br /&gt;" + 
+                    thumb1.greeting() + "&lt;br /&gt;" + 
+                    thumb2.greeting();
+            },
+            draw: function () {
+                $(".animal").html(this.greeting());
+            }
+        };
+    }
+);
+</pre></p>
+    </dd>
+
+</dl>
+
+<h4>Component</h4>
+<dl>
+    <dt><a name="component.create"></a>create</dt>
+        <dd>
+        <p>creates a Greasy object. Same as calling <pre class="inline sh_javascript">new Greasy(arguments)</pre></p>
+        <p>Example:
+<pre class="sh_javascript">
+var Human = greasy.get("Human"),
+    mike = Human.create("Mike");
+</pre>
+        </p>
+        </dd>
+</dl>
+
+
+<a name="about"></a><h3>About</h3>
+
+<p>greasy.js was developed by Peter West (FlamingTempura). It is released under the MIT license.</p>
+
+Get the source code on GitHub : <a href="http://github.com/FlamingTempura/greasy.js">FlamingTempura/greasy.js</a>
