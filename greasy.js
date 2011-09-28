@@ -109,7 +109,7 @@
                     } else if (_(options.extend).isFunction()) {
                         extendType = "function";
                     } else {
-                        throw new Error("Cannot extend on " + options.extend + ". It is not a component name or function.")
+                        throw new Error("Cannot extend on " + options.extend + ". It is not a component name or function.");
                     }
                 }
                 if (options.hasOwnProperty("require")) {
