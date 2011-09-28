@@ -1,4 +1,8 @@
-window.Greasy = (function ($, _) {
+// Greasy.js
+// (c) 2011 Peter West
+//  Greasy.js is freely distributable under the MIT license.
+
+(function ($, _) {
     "use strict";
 
     // A hack to allow debugging on scripts recieved using jQuery.getScript.
@@ -38,6 +42,9 @@ window.Greasy = (function ($, _) {
 
     var logging = false,
 
+        // In browser, this will be window
+        root = window,
+
         greasyThis,
 
         // Mapping of component names to the files they are contained in
@@ -56,31 +63,34 @@ window.Greasy = (function ($, _) {
         Greasy = function () {
             greasyThis = this;
             imports = { greasy: this };
-        },
+        };
 
-        create = function () {
-            if (logging) { console.log("create", arguments); }
-            return new Greasy(arguments);
-        },
+    root.Greasy = Greasy;
 
-        setImports = function (newImports) {
+    Greasy.create = function () {
+        if (logging) { console.log("create", arguments); }
+        return new Greasy(arguments);
+    };
+
+    _(Greasy.prototype).extend({
+        setImports: function (newImports) {
             if (logging) { console.log("setImports", arguments); }
             imports = _(newImports).clone();
             imports.greasy = greasyThis;
         },
 
-        registerComponents = function (newComponents) {
+        registerComponents: function (newComponents) {
             if (logging) { console.log("registerComponents", arguments); }
             _(registeredComponents).extend(newComponents);
         },
 
-        get = function (componentName) {
+        get: function (componentName) {
             if (logging) { console.log("get", arguments); }
             if (!components.hasOwnProperty(componentName)) { throw new Error("The component " + componentName + " does not exist"); }
             return components[componentName];
         },
 
-        requireComponents = function (components, callback) {
+        requireComponents: function (components, callback) {
             if (logging) { console.log("requireComponents", arguments); }
 
             if (!_(components).isArray()) { throw new Error("components must be an array"); }
@@ -113,7 +123,7 @@ window.Greasy = (function ($, _) {
             return dfd;
         },
 
-        defineComponent = function (componentName, options, callback) {
+        defineComponent: function (componentName, options, callback) {
             if (_(options).isFunction()) {
                 callback = options;
                 options = undefined;
@@ -135,14 +145,14 @@ window.Greasy = (function ($, _) {
                     requiredComponents.push(options.extend);
                 }
             }
-            dfd = requireComponents(requiredComponents, callback);
+            dfd = greasyThis.requireComponents(requiredComponents, callback);
 
             $.when(dfd).then(function (prototypeObject) {
                 var Constructor,
                     url = registeredComponents[componentName];
 
                 if (options && options.hasOwnProperty("extend")) {
-                    Constructor = get(options.extend);
+                    Constructor = greasyThis.get(options.extend);
                 } else {
                     Constructor = function (args) {
                         if (arguments.length !== 1 || !_(args).isArguments()) { // HACK
@@ -163,18 +173,7 @@ window.Greasy = (function ($, _) {
                 components[componentName] = Constructor;
                 requestedFiles[url].resolve(); // It's loaded successfully
             });
-        };
-
-    _(Greasy.prototype).extend({
-        setImports: setImports,
-        registerComponents: registerComponents,
-        get: get,
-        requireComponents: requireComponents,
-        defineComponent: defineComponent
+        }
     });
-
-    return {
-        create: create
-    };
 
 }(jQuery, _));
