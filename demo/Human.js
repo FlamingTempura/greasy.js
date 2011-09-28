@@ -10,9 +10,9 @@ window.animalLibrary.greasy.defineComponent(
             greasy = imports.greasy,
             Thumb = greasy.get("Thumb"),
             thumb1 = Thumb.create({ name: "Thumb 1" }),
-            thumb2 = Thumb.create({ name: "Thumb 2returngith
+            thumb2 = new Thumb({ name: "Thumb 2" });
 
-        " }); {
+        return {
             greeting: function () {
                 return "Hello World!<br />" + thumb1.greeting() +
                     "<br />" + thumb2.greeting();
