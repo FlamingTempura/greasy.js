@@ -243,7 +243,7 @@ greasy.requireComponents(
                 <dd>object containing any of the following options:
                 <dl>
                     <dt>require</dt><dd>array of other components that will be required
-                    <dt>extend</dt><dd>a class that the class should extend on</dd>
+                    <dt>extend</dt><dd>a component name or function that the class should extend on.</dd>
                 </dl>
                 </dd>
             <dt>callback</dt>
@@ -255,14 +255,20 @@ greasy.requireComponents(
 greasy.defineComponent(
     "Human",
     {
+        // Get the `Thumb` component ready before proceeding
         require: ["Thumb"],
+
+        // Extend on the component `Mammal`
         extend: "Mammal"
     },
     function (imports) {
         "use strict";
+
         var $ = imports.$,
             greasy = imports.greasy,
+            // Get the Thumb component
             Thumb = greasy.get("Thumb"),
+            // Make a couple of thumbs (last I checked, humans have two)
             thumb1 = Thumb.create({ name: "Thumb 1" }),
             thumb2 = Thumb.create({ name: "Thumb 2" });
 
@@ -279,6 +285,28 @@ greasy.defineComponent(
     }
 );
 </pre></p>
+        <p>
+
+        <p>It is possible to extend on existing functions. For example, we can extend on <a href="http://documentcloud.github.com/backbone/">Backbone</a>.View:
+<pre class="sh_javascript">
+greasy.defineComponent(
+    "Human",
+    {
+        // Extend on the Backbone's View
+        extend: Backbone.View
+    },
+    function (imports) {
+        "use strict";
+
+        /* Private things */
+
+        return {
+            /* Public things */
+        };
+    }
+);
+</pre>
+        </p>
     </dd>
 
 </dl>
