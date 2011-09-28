@@ -40,17 +40,17 @@
         }
     });
 
-    var logging = false,
+    // In browser, global object will be window
+    var root = window,
 
-        // In browser, this will be window
-        root = window,
-
+        // Keep a reference to `this` of the greasy object
         greasyThis,
 
         // Mapping of component names to the files they are contained in
         registeredComponents = {},
 
-        // Mapping of js files that we have already requested to their deferred objects
+        // Mapping of js files that we have already requested to their
+        // deferred objects
         requestedFiles = {},
 
         // Successfully loaded component constructors
@@ -59,39 +59,35 @@
         // Variables that will be provided to components
         imports,
 
-
-        Greasy = function () {
+        // The constructor for Greasy. 
+        Greasy = root.Greasy = function () {
             greasyThis = this;
             imports = { greasy: this };
         };
 
-    root.Greasy = Greasy;
-
+    // Alias for `new Greasy(arguments)`
     Greasy.create = function () {
-        if (logging) { console.log("create", arguments); }
-        return new Greasy(arguments);
+        return new Greasy(arguments); // FIXME: provides arguments object as an argument
     };
 
     _(Greasy.prototype).extend({
         setImports: function (newImports) {
-            if (logging) { console.log("setImports", arguments); }
             imports = _(newImports).clone();
             imports.greasy = greasyThis;
         },
 
         registerComponents: function (newComponents) {
-            if (logging) { console.log("registerComponents", arguments); }
             _(registeredComponents).extend(newComponents);
         },
 
         get: function (componentName) {
-            if (logging) { console.log("get", arguments); }
+
             if (!components.hasOwnProperty(componentName)) { throw new Error("The component " + componentName + " does not exist"); }
             return components[componentName];
         },
 
         requireComponents: function (components, callback) {
-            if (logging) { console.log("requireComponents", arguments); }
+
 
             if (!_(components).isArray()) { throw new Error("components must be an array"); }
 
@@ -129,7 +125,7 @@
                 options = undefined;
             }
 
-            if (logging) { console.log("defineComponent", arguments); }
+
 
             var dfd,
                 requiredComponents = [];
