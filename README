@@ -1,170 +1,156 @@
 greasy.js - a dependancy framework for JavaScript
 
-Rational
+Introduction
 
 
 As a JavaScript application becomes more complicated, you can be faced with the challenge of a huge file. greasy.js aims to mitigate this by encouraging you to separate your application into separate components and allowing them to be dependent on other components.
 
-Include greasy using the following
+Include greasy.js using the following
+
+<script src=”jquery.js”></script>
+<script src=”underscore.js”></script>
 
 <script src=”greasy.js”></script>
 
 Create a greasy object:
 var greasy = new Greasy();
-
-- or -
-
+or
 var greasy = Greasy.create();
 
 Register your components with greasy
 
 greasy.registerComponents(object);
 
-Where object is a mapping of component-names to filenames. Eg:
+Where object is a mapping of component-names to filenames. For example:
 
 greasy.registerComponents({
 	“Mammal”: “Mammel.js”,
 	“Human”: “Human.js”
 });
 
-When a component is requires, it will load the js file attributed to it.
+When a component is required, it will load the js file mapped to it.
 
-We define a component:
+To define a component:
 
-greasy.defineComponent(options, prototype);
+greasy.defineComponent(name, options, callback);
+
+name is the identifier that will be used to refer to the component
 
 options is an object which may have any of the following:
-name - the name of the class
-requireClasses - array of other classnames that will be required
-requireTemplates - array of templates that will be required
+require - array of other components that will be required
 extend - a class that the class should extend on
 
 
-prototype is an object descripting the 
+the callback should return an object that will be the prototype for the component constructor.
 
-greasy.defineClass({
-	name: “Mammal”
-	
+	For example:
 
-
-Example use:
-
-window.animalLibrary = (function ($, Greasy) {
-	“use strict”;
-	var greasy = Greasy.create();
-greasy.registerComponents({
-	“Mammal”: “Mammel.js”,
-	“Human”: “Human.js”,
-	“Thumb”: “Thumb.js”
-});
-
-greasy.setImports({
-	$: $
-});
-
-$(document).ready(function () {
-	greasy.requireComponents
-});
-
-return {
-	greasy: greasy
-};
-}(jQuery, Greasy));
-
-Mammel.js
 window.animalLibrary.greasy.defineComponent(
-	“Mammal”,
+	"Mammal",
 	function (imports) {
-		“use strict”;
+		"use strict";
 		var $ = imports.$;
+
 		return {
 			hasSpine: function () {
 				return true;
 			},
-			greeting: function () {
-				return “Not sure...”;
-			},
-			draw: function () {
-				$(“.animal”).html(“Mammal”);
-			}
-		};
-}
-);
 
-Thumb.js
-window.animalLibrary.greasy.defineComponent(
-	“Thumb”,
-	function (imports) {
-		“use strict”;
-		var name = “”;
-		return {
-			initialize: function (options) {
-				name = options.name || “Unnamed Thumb”;
-			},
 			greeting: function () {
-				return name + “ says hello!”;
-			}
-};
-}
-);
+				return "Not sure...";
+			},
 
-Human.js
-window.animalLibrary.greasy.defineComponent(
-	“Human”,
-	{
-		require: “Thumb”,
-		extend: “Mammel”
-	},
-	function (imports) {
-		“use strict”;
-		var $ = imports.$,
-greasy = imports.greasy,
-Thumb = greasy.get(“Thumb”),
-thumb1 = Thumb.create({ name: “Thumb 1” }),
-thumb2 = Thumb.create({ name: “Thumb 2” });
-		return {
-			greeting: function () {
-				return “Hello World!<br />” + thumb1.greeting +
-“<br />” + thumb2.greeting;
-			},
 			draw: function () {
-				$(“.animal”).html(“Human”);
+				$(".animal").html("Mammal says " + 
+this.greeting());
 			}
 		};
 	}
 );
 
+
+API
+
+
+Greasy Constructor	
+
+Greasy.create(arguments)
+	creates a Greasy object. Same as calling new Greasy(arguments)
+
+GreasyObject
+
+setImports(imports)
+imports: object that is given to all callbacks in requireComponents and defineComponent.
+Callbacks on requireComponents and defineComponent are given imports as an argument. This allows those functions to access variables that would otherwise have to be global. imports.greasy is always available for access to the greasy object.
+	Example:
+	// Provide access to jQuery and underscore objects
+	greasy.setImports({
+	    jQuery: jQuery,
+	    _, _
+	});
+
+registerComponents(components)
+components: object of component-names to the filenames that they are defined in. 
+Register mappings of component-names to the filenames that they are defined in.
+	Example:
+greasy.registerComponents({
+    “Mammal”: “Mammel.js”,
+    “Human”: “Human.js”
+});
+
+get(componentName)
+	Get the component constructor for the given component name.
+	Example:
+var Human = greasy.get(“Human”),
+    mike = Human.create(“Mike”);
+
+requireComponents(components, callback)
+components: array of componentNames of components that will be required within the callback
+	callback: function to be called once all components have loaded and executed
+	Example:
+	greasy.requireComponents(
+[“Mammal”],
+function (imports) {
+	var greasy = imports.greasy,
+		Mammal = greasy.get(“Mammal”),
+		mammal = Mammal.create();
+}
+);
+
+defineComponent(componentName, options, callback)
+	componentName: name of the component that is to be defined
+	options: object containing any of the following options
+callback: function to be called once requirements have been fulfilled. Must return an object to be used as the prototype for the components constructor.
+
+Example:
+greasy.defineComponent(
+    "Human",
+    {
+        require: ["Thumb"],
+        extend: "Mammal"
+    },
+    function (imports) {
+        "use strict";
+        var $ = imports.$,
+            greasy = imports.greasy,
+            Thumb = greasy.get("Thumb"),
+            thumb1 = Thumb.create({ name: "Thumb 1" }),
+            thumb2 = Thumb.create({ name: "Thumb 2" });
+
+        return {
+            greeting: function () {
+                return "Hello World!<br />" + thumb1.greeting() +
+                    "<br />" + thumb2.greeting();
+            },
+            draw: function () {
+                $(".animal").html(this.greeting());
+            }
+        };
+    }
+);
+
 Dependancies
-jQuery
-Underscore
 
+jQuery - http://jquery.com/
+Underscore - documentcloud.github.com/underscore/ 
 
-Further Reading
-Module pattern: http://www.adequatelygood.com/2010/3/JavaScript-Module-Pattern-In-Depth
-
-
-
-Global variables
-Global variables are bad (Crockford), but unfortunately the design of JavaScript gives us no choice but to use them. There are a variety of ways that we can mitigate this, one of which by using a module pattern, which involves containing you program within a single self-executing closure:
-
-(function ($) {
-	var hiddenFunction = function () {
-		$(“.first-name”).text(“Bob”);
-		$(“.last-name”).text(“Murray”);
-	};
-	hiddenFunction();
-}(jQuery));
-
-The closure allows the state of the module to be hidden and mitigates our need for global variables.
-
-If we want our module to be accessible from outside, we must unfortunately assign this to a global variable.
-
-window.myModule = (function ($) {
-	var hiddenFunction = function () { /* Do stuff */ };
-	var visibleFunction = function () { /* Do stuff */ };
-	
-	return {
-		visibleFunction: visibleFunction
-	};
-}(jQuery));
-window.myModule.visibleFunction();
