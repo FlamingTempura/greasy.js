@@ -67,7 +67,13 @@
 
     // Alias for `new Greasy(arguments)`
     Greasy.create = function () {
-        return new Greasy(arguments); // FIXME: provides arguments object as an argument
+        var F = function () {}, // Dummy function
+            o;
+        F.prototype = Greasy.prototype;
+        o = new F();
+        Greasy.apply(o, arguments);
+        o.constructor = Greasy;
+        return o;
     };
 
     _(Greasy.prototype).extend({
@@ -81,14 +87,11 @@
         },
 
         get: function (componentName) {
-
             if (!components.hasOwnProperty(componentName)) { throw new Error("The component " + componentName + " does not exist"); }
             return components[componentName];
         },
 
         requireComponents: function (components, callback) {
-
-
             if (!_(components).isArray()) { throw new Error("components must be an array"); }
 
             var dfd = new $.Deferred(),
@@ -125,8 +128,6 @@
                 options = undefined;
             }
 
-
-
             var dfd,
                 requiredComponents = [];
 
@@ -150,17 +151,20 @@
                 if (options && options.hasOwnProperty("extend")) {
                     Constructor = greasyThis.get(options.extend);
                 } else {
-                    Constructor = function (args) {
-                        if (arguments.length !== 1 || !_(args).isArguments()) { // HACK
-                            args = arguments;
-                        }
+                    Constructor = function () {
                         if (prototypeObject.initialize) {
-                            prototypeObject.initialize.apply(this, args);
+                            prototypeObject.initialize.apply(this, arguments);
                         }
                     };
 
                     Constructor.create = function () {
-                        return new Constructor(arguments); // HACK - do something better like https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind#Supplemental
+                        var F = function () {}, // Dummy function
+                            o;
+                        F.prototype = Constructor.prototype;
+                        o = new F();
+                        Constructor.apply(o, arguments);
+                        o.constructor = Constructor;
+                        return o;
                     };
                 }
 
