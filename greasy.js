@@ -99,16 +99,26 @@
             }
 
             var dfd,
-                requiredComponents = [];
+                requiredComponents = [],
+                extendType;
 
             if (options) {
+                if (options.hasOwnProperty("extend")) {
+                    if (_(options.extend).isString()) {
+                        extendType = "componentName";
+                    } else if (_(options.extend).isFunction()) {
+                        extendType = "function";
+                    } else {
+                        throw new Error("Cannot extend on " + options.extend + ". It is not a component name or function.")
+                    }
+                }
                 if (options.hasOwnProperty("require")) {
                     if (!_(options.require).isArray()) {
                         throw new Error("require option must be an array");
                     }
                     requiredComponents = requiredComponents.concat(options.require);
                 }
-                if (options.hasOwnProperty("extend")) {
+                if (extendType === "componentName") {
                     requiredComponents.push(options.extend);
                 }
             }
@@ -118,25 +128,36 @@
                 var Constructor,
                     url = registeredComponents[componentName];
 
-                if (options && options.hasOwnProperty("extend")) {
+                if (extendType === "componentName") {
                     Constructor = greasyThis.get(options.extend);
+
+                } else if (extendType === "function") {
+                    // Does the constructor already have an extend method?
+                    if (options.extend.hasOwnProperty("extend")) {
+                        Constructor = options.extend.extend(prototypeObject);
+                    } else {
+                        Constructor = function () {};
+                        // Extend the prototype
+                        Constructor.prototype = _(options.extend.prototype).extend(prototypeObject);
+                    }
+
                 } else {
                     Constructor = function () {
                         if (prototypeObject.initialize) {
                             prototypeObject.initialize.apply(this, arguments);
                         }
                     };
-
-                    Constructor.create = function () {
-                        var F = function () {}, // Dummy function
-                            o;
-                        F.prototype = Constructor.prototype;
-                        o = new F();
-                        Constructor.apply(o, arguments);
-                        o.constructor = Constructor;
-                        return o;
-                    };
                 }
+
+                Constructor.create = function () {
+                    var F = function () {}, // Dummy function
+                        o;
+                    F.prototype = Constructor.prototype;
+                    o = new F();
+                    Constructor.apply(o, arguments);
+                    o.constructor = Constructor;
+                    return o;
+                };
 
                 _(Constructor.prototype).extend(prototypeObject);
 
