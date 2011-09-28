@@ -1,5 +1,8 @@
 window.animalLibrary.greasy.defineComponent(
     "Thumb",
+    {
+        extend: Backbone.View
+    },
     function () {
         "use strict";
 
@@ -11,6 +14,7 @@ window.animalLibrary.greasy.defineComponent(
             },
 
             greeting: function () {
+                console.log(this)
                 return this.name + " says hello!";
             }
         };
