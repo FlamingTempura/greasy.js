@@ -5,41 +5,6 @@
 (function ($, _) {
     "use strict";
 
-    // A hack to allow debugging on scripts recieved using jQuery.getScript.
-    // Replace the normal jQuery getScript function with one that supports
-    // debugging and which references the script files as external resources
-    // rather than inline.
-    jQuery.extend({
-        getScript: function (url, callback) {
-            var head = document.getElementsByTagName("head")[0],
-                script = document.createElement("script"),
-                done = false;
-
-            script.src = url;
-
-            // Handle Script loading
-
-            // Attach handlers for all browsers
-            script.onload = script.onreadystatechange = function () {
-                if (!done && (!this.readyState ||
-                            this.readyState === "loaded" || this.readyState === "complete")) {
-                    done = true;
-                    if (callback) {
-                        callback.call();
-                    }
-
-                    // Handle memory leak in IE
-                    script.onload = script.onreadystatechange = null;
-                }
-            };
-
-            head.appendChild(script);
-
-            // We handle everything using the script element injection
-            return undefined;
-        }
-    });
-
     // In browser, global object will be window
     var root = window,
 
@@ -108,7 +73,12 @@
 
                     dfd = new $.Deferred();
 
-                    $.getScript(url);
+                    jQuery.ajax({
+                        crossDomain: true,
+                        dataType: "script",
+                        url: url
+                    });
+
                     requestedFiles[url] = dfd;
                     return dfd;
                 });
