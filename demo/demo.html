@@ -1,0 +1,43 @@
+<html>
+    <head>
+    <script src="../lib/jquery.js"></script>
+    <script src="../lib/underscore.js"></script>
+    <script src="../greasy.js"></script>
+    <script>
+        window.animalLibrary = (function ($, Greasy) {
+            "use strict";
+
+            var greasy = Greasy.create();
+
+            greasy.registerComponents({
+                "Mammal": "Mammal.js",
+                "Human": "Human.js",
+                "Thumb": "Thumb.js"
+            });
+
+            greasy.setImports({
+                $: $
+            });
+
+            $(document).ready(function () {
+                greasy.requireComponents(
+                    ["Human"],
+                    function (imports) {
+                        var greasy = imports.greasy,
+                            human = greasy.get("Human").create();
+
+                        human.draw();
+                    }
+                );
+            });
+
+            return {
+                greasy: greasy
+            };
+        }(jQuery, Greasy));
+    </script>
+    </head>
+    <body>
+        <div class="animal"></div>
+    </body>
+</html>
