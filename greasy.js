@@ -67,11 +67,16 @@
                     }
 
                     var url = registeredComponents[component],
-                        dfd;
+                        dfd,
+                        dfdFail;
 
                     if (requestedFiles.hasOwnProperty(url)) { return; } // Component has already been requested
 
                     dfd = new $.Deferred();
+                    dfdFail = setTimeout(function () {
+                        throw new Error(component + " has timed out loading. Perhaps it has not been defined?");
+                    }, 2000);
+                    dfd.then(function () { clearTimeout(dfdFail); });
 
                     jQuery.ajax({
                         crossDomain: true,
