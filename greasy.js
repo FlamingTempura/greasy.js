@@ -70,7 +70,7 @@
                         dfd,
                         dfdFail;
 
-                    if (requestedFiles.hasOwnProperty(url)) { return; } // Component has already been requested
+                    if (requestedFiles.hasOwnProperty(url)) { return requestedFiles[url]; } // Component has already been requested
 
                     dfd = new $.Deferred();
                     dfdFail = setTimeout(function () {
@@ -130,43 +130,44 @@
             dfd = greasyThis.requireComponents(requiredComponents, callback);
 
             $.when(dfd).then(function (prototypeObject) {
-                var Constructor,
+                var ConstructorToExtend,
+                    NewConstructor = function () {},
                     url = registeredComponents[componentName];
 
-                if (extendType === "componentName") {
-                    Constructor = greasyThis.get(options.extend);
-
-                } else if (extendType === "function") {
-                    // Does the constructor already have an extend method?
-                    if (options.extend.hasOwnProperty("extend")) {
-                        Constructor = options.extend.extend(prototypeObject);
-                    } else {
-                        Constructor = function () {};
-                        // Extend the prototype
-                        Constructor.prototype = _(options.extend.prototype).extend(prototypeObject);
-                    }
-
+                if (extendType === "function") {
+                    ConstructorToExtend = options.extend;
+                } else if (extendType === "componentName") {
+                    ConstructorToExtend = greasyThis.get(options.extend);
                 } else {
-                    Constructor = function () {
-                        if (prototypeObject.initialize) {
-                            prototypeObject.initialize.apply(this, arguments);
-                        }
+                    NewConstructor = function () {
+                        if (prototypeObject.initialize) { prototypeObject.initialize.apply(this, arguments); }
                     };
                 }
 
-                Constructor.create = function () {
+                // Does the constructor already have an extend method?
+                if (ConstructorToExtend.hasOwnProperty("extend")) {
+                    NewConstructor = ConstructorToExtend.extend(prototypeObject);
+                } else {
+                    // Get the prototype of the constructor we're extending
+                    if (ConstructorToExtend) {
+                        _(NewConstructor.prototype).extend(ConstructorToExtend.prototype);
+                    }
+                    
+                    // Extend the prototype
+                    _(NewConstructor.prototype).extend(prototypeObject);
+                }
+
+                NewConstructor.create = function () {
                     var F = function () {}, // Dummy function
                         o;
-                    F.prototype = Constructor.prototype;
+                    F.prototype = NewConstructor.prototype;
                     o = new F();
-                    Constructor.apply(o, arguments);
-                    o.constructor = Constructor;
+                    NewConstructor.apply(o, arguments);
+                    o.constructor = NewConstructor;
                     return o;
                 };
 
-                _(Constructor.prototype).extend(prototypeObject);
-
-                components[componentName] = Constructor;
+                components[componentName] = NewConstructor;
                 requestedFiles[url].resolve(); // It's loaded successfully
             });
         }
