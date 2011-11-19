@@ -82,9 +82,6 @@
         // Set the root url that will be prepended to relative urls when fetching components
         setRoot: function (componentRootURL) {
             log("Set root URL: " + componentRootURL, this);
-            if (componentRootURL.slice(-1) !== "/") {
-                componentRootURL = "/" + componentRootURL;
-            }
             greasy.componentRootURL = componentRootURL;
         },
 
