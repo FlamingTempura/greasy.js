@@ -1,103 +1,179 @@
-// Greasy.js
+// Greasy.js Version 0.2
 // (c) 2011 Peter West
-//  Greasy.js is freely distributable under the MIT license.
+// Greasy.js is freely distributable under the MIT license.
+// Documentation may be found at http://flamingtempura.github.com/greasy.js/
 
+/*jslint nomen: true*/
 (function ($, _) {
     "use strict";
 
-    // In browser, global object will be window
-    var root = window,
+    var VERSION = "0.2",
 
-        // Keep a reference to `this` of the greasy object
-        greasyThis,
+        // Time before a request is deemed failed, in milliseconds
+        timeout = 2000,
 
-        // Mapping of component names to the files they are contained in
-        registeredComponents = {},
+        // Output debug information to console
+        logging = false,
 
-        // Mapping of js files that we have already requested to their
-        // deferred objects
-        requestedFiles = {},
+        // In browser, global object will be window
+        root = this,
 
-        // Successfully loaded component constructors
-        components = {},
+        // Keep greasy to old greasy is there is one
+        previousGreasy = root.greasy,
 
-        // Variables that will be provided to components
-        imports,
+        // Make the greasy object. 
+        greasy = root.greasy = {},
 
-        // The constructor for Greasy. 
-        Greasy = root.Greasy = function () {
-            greasyThis = this;
-            imports = { greasy: this };
-        };
-
-    // Alias for `new Greasy(arguments)`
-    Greasy.create = function () {
-        var F = function () {}, // Dummy function
-            o;
-        F.prototype = Greasy.prototype;
-        o = new F();
-        Greasy.apply(o, arguments);
-        o.constructor = Greasy;
-        return o;
-    };
-
-    _(Greasy.prototype).extend({
-        setImports: function (newImports) {
-            imports = _(newImports).clone();
-            imports.greasy = greasyThis;
+        defaultImports = {
+            greasy: greasy,
+            $: $,
+            _: _
         },
 
-        registerComponents: function (newComponents) {
-            _(registeredComponents).extend(newComponents);
+        createObjFromConstructor = function (Constructor, args) {
+            var F = function () {}, // Dummy function
+                o;
+            F.prototype = Constructor.prototype;
+            o = new F();
+            Constructor.apply(o, args);
+            o.constructor = Constructor;
+            return o;
+        },
+
+        prefixUrl = function (url, rootUrl) {
+            if (rootUrl && url.indexOf("http://") !== 0 && url.slice(0, 1) !== "/") {
+                return rootUrl + url;
+            } else {
+                return url;
+            }
+        },
+
+        log = function () {
+            if (logging && console) {
+                console.log.apply(console, arguments);
+            }
+        };
+
+    _(greasy).extend({
+        VERSION: VERSION,
+
+        // Returns reference to greasy object
+        noConflict: function () {
+            root.greasy = previousGreasy;
+            return this;
+        },
+
+        // Mapping of component names to the urls they are defined in
+        componentURLs: {},
+
+        // Mapping of js files that we have already requested to their
+        // jQuery Deferred objects
+        requestedFiles: {},
+
+        // Successfully loaded component constructors
+        components: {},
+
+        // Object that will be provided to components
+        imports: { greasy: greasy },
+
+        // URL to suffex to relative URLs
+        componentRootURL: undefined,
+
+        // Set the root url that will be prepended to relative urls when fetching components
+        setRoot: function (componentRootURL) {
+            log("Set root URL: " + componentRootURL, this);
+            greasy.componentRootURL = componentRootURL;
+        },
+
+        // Object given to components. Can be used to defined jQuery, for example.
+        setImports: function (imports) {
+            log("Set imports: ", imports, this);
+            greasy.imports = _(imports).chain()
+                .clone()
+                .extend(defaultImports).value();
+        },
+
+        // Register mappings of component-names to urls they are defined at
+        register: function (componentURLs) {
+            log("Register component names->urls: ", componentURLs, this);
+            _(greasy.componentURLs).extend(componentURLs);
         },
 
         get: function (componentName) {
-            if (!components.hasOwnProperty(componentName)) { throw new Error("The component " + componentName + " does not exist"); }
-            return components[componentName];
+            log("Getting component: ", componentName, this);
+            if (!greasy.components.hasOwnProperty(componentName)) {
+                throw new Error("The component " + componentName + " does not exist");
+            }
+            return greasy.components[componentName];
         },
 
-        requireComponents: function (components, callback) {
-            if (!_(components).isArray()) { throw new Error("components must be an array"); }
+        create: function (componentName) {
+            log("Creating component: ", componentName, this);
+            var args = Array.prototype.slice.call(arguments, 1),
+                component = greasy.get(componentName);
 
-            var dfd = new $.Deferred(),
-                dfds = _(components).map(function (component) {
+            return component.create.apply(component, args);
+        },
 
-                    if (!registeredComponents.hasOwnProperty(component)) {
-                        throw new Error(component + " is not a valid component or has not been registered with greasy");
+        require: function (componentNames, callback) {
+            log("Require components: ", componentNames, this);
+            if (!_(componentNames).isArray()) {
+                throw new Error("componentNames must be an array");
+            }
+
+            var deferredUntilReady = new $.Deferred(),
+
+                deferredUntilAllRequiredComponentsDefined =  _(componentNames).map(function (componentName) {
+
+                    if (!greasy.componentURLs.hasOwnProperty(componentName)) {
+                        throw new Error(componentName +
+                            " is not a valid component or has not been registered with greasy");
                     }
 
-                    var url = registeredComponents[component],
-                        dfd,
-                        dfdFail;
+                    var url = greasy.componentURLs[componentName];
 
-                    if (requestedFiles.hasOwnProperty(url)) { return requestedFiles[url]; } // Component has already been requested
+                    // Has component already been requested?
+                    if (greasy.requestedFiles.hasOwnProperty(url)) {
+                        return greasy.requestedFiles[url];
+                    }
 
-                    dfd = new $.Deferred();
-                    dfdFail = setTimeout(function () {
-                        throw new Error(component + " has timed out loading. Perhaps it has not been defined?");
-                    }, 2000);
-                    dfd.then(function () { clearTimeout(dfdFail); });
+                    var requestURL = prefixUrl(url, greasy.componentRootURL),
 
-                    jQuery.ajax({
-                        crossDomain: true,
-                        dataType: "script",
-                        url: url
+                        deferredUntilComponentDefined = new $.Deferred(),
+
+                        failureTimeout = setTimeout(function () {
+                            throw new Error(componentName +
+                                " has timed out loading. Perhaps it has not been defined?");
+                        }, timeout);
+
+                    // Loaded - cancel failure timeout
+                    deferredUntilComponentDefined.then(function () {
+                        clearTimeout(failureTimeout);
                     });
 
-                    requestedFiles[url] = dfd;
-                    return dfd;
+                    // Must use crossDomain (uses <script> tags) for console (Firebug, chrome etc) 
+                    // to work
+                    $.ajax({
+                        crossDomain: true,
+                        dataType: "script",
+                        url: requestURL
+                    });
+
+                    greasy.requestedFiles[url] = deferredUntilComponentDefined;
+                    return deferredUntilComponentDefined;
                 });
 
             // Once all components have been loaded, execute the callback
-            $.when.apply(undefined, dfds).then(function () {
-                var result = callback.call(undefined, imports);
-                dfd.resolve(result);
+            $.when.apply(undefined, deferredUntilAllRequiredComponentsDefined).then(function () {
+                var result = callback.call(undefined, greasy.imports);
+                deferredUntilReady.resolve(result);
             });
 
-            return dfd;
+            return deferredUntilReady;
         },
 
-        defineComponent: function (componentName, options, callback) {
+        define: function (componentName, options, callback) {
+            log("Defining componentName: ", componentName, " with options: ", options, this);
             if (_(options).isFunction()) {
                 callback = options;
                 options = undefined;
@@ -127,17 +203,17 @@
                     requiredComponents.push(options.extend);
                 }
             }
-            dfd = greasyThis.requireComponents(requiredComponents, callback);
+            dfd = greasy.require(requiredComponents, callback);
 
             $.when(dfd).then(function (prototypeObject) {
                 var ConstructorToExtend,
                     NewConstructor = function () {},
-                    url = registeredComponents[componentName];
+                    url = greasy.componentURLs[componentName];
 
                 if (extendType === "function") {
                     ConstructorToExtend = options.extend;
                 } else if (extendType === "componentName") {
-                    ConstructorToExtend = greasyThis.get(options.extend);
+                    ConstructorToExtend = greasy.get(options.extend);
                 } else {
                     NewConstructor = function () {
                         if (prototypeObject.initialize) { prototypeObject.initialize.apply(this, arguments); }
@@ -152,25 +228,24 @@
                     if (ConstructorToExtend) {
                         _(NewConstructor.prototype).extend(ConstructorToExtend.prototype);
                     }
-                    
+
                     // Extend the prototype
                     _(NewConstructor.prototype).extend(prototypeObject);
                 }
 
                 NewConstructor.create = function () {
-                    var F = function () {}, // Dummy function
-                        o;
-                    F.prototype = NewConstructor.prototype;
-                    o = new F();
-                    NewConstructor.apply(o, arguments);
-                    o.constructor = NewConstructor;
-                    return o;
+                    return createObjFromConstructor(NewConstructor, arguments);
                 };
 
-                components[componentName] = NewConstructor;
-                requestedFiles[url].resolve(); // It's loaded successfully
+                greasy.components[componentName] = NewConstructor;
+                greasy.requestedFiles[url].resolve(); // It's loaded successfully
             });
         }
     });
 
-}(jQuery, _));
+    // Aliases
+    greasy.registerComponents = greasy.register;
+    greasy.requireComponents = greasy.require;
+    greasy.defineComponent = greasy.define;
+
+}.call(this, jQuery, _));
