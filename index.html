@@ -89,7 +89,7 @@
     <!-- <li><a>Annotated source code</a></li> -->
     <li><a href="#usage">Usage</a></li>
     <li><a href="#api">API</a></li>
-    <!-- <li><a href="#example">Example use</a></li> -->
+    <li><a href="animals-demo/index.html">Demo</a></li>
     <li><a href="#about">About</a></li>
     <li><a href="https://github.com/FlamingTempura/greasy.js/issues">Issues, bug reports and discussions</a></li>
 </ul>
@@ -116,64 +116,82 @@
 </pre>
 </p>
 
-<p>Create a greasy object:
-<pre class="sh_javascript">var greasy = new Greasy();</pre>
-or
-<pre class="sh_javascript">var greasy = Greasy.create();</pre></p>
+<p>Each component that you create should have a name, which will be used to identify it later, and should be in it's own js file.</p>
 
-<p>Register your components with greasy:
+<p>For example, Mammal.js contains the definition for the Mammal component:
 <pre class="sh_javascript">
-greasy.registerComponents({
-    "Mammal": "Mammel.js",
-    "Human": "Human.js"
-});
-</pre></p>
-
-<p>Define a component:
-<pre class="sh_javascript">
-window.animalLibrary.greasy.defineComponent(
-    "Mammal",
+greasy.define(
+    "Mammal", // Component name
     function (imports) {
         "use strict";
         var $ = imports.$;
 
+        // Return an object defining the component
         return {
             hasSpine: function () {
                 return true;
-            },
-
-            greeting: function () {
-                return "Not sure...";
-            },
-
-            draw: function () {
-                $(".animal").html("Mammal says " + 
-                    this.greeting());
             }
         };
     }
 );
 </pre></p>
 
+<p>greasy allows components to require the existence of other components and inheritance. For example, Human extends Mammal and requires Hat:
+<pre class="sh_javascript">
+greasy.define(
+    "Human",
+    {
+        // Get the Hat component ready before proceeding
+        require: ["Hat"],
+
+        // Extend on the component Mammal
+        extend: "Mammal"
+    },
+    function (imports) {
+        "use strict";
+
+        var $ = imports.$,
+            greasy = imports.greasy;
+
+        return {
+            name: undefined,
+            
+            initialize: function (name, job, hatColour) {
+                this.name = name;
+            },
+
+            sayHello: function () {
+                return "Hello! My name is " + this.name + ".";
+            },
+        };
+    }
+);
+</pre>
+</p>
+
+<p>The locations of each component need to be registered with greasy:
+<pre class="sh_javascript">
+greasy.register({
+    "Mammal": "Mammal.js",
+    "Human": "Human.js",
+    "Hat": "Hat.js"
+});
+</pre></p>
+
+<p><a href="animals-demo/index.html">See the full demo here.</a></p>
+
+
 <a name="api"></a><h3>API</h3>
 
 <h4>Contents</h4>
-<h5>Greasy Constructor</h5>
-<p><a href="#Greasy.create">create</a></p>
 
-<h5>Greasy Object</h5>
-<p><a href="#setImports">setImports</a>, <a href="#registerComponents">registerComponents</a>, <a href="#get">get</a>, <a href="#requireComponents">requireComponents</a>, <a href="#defineComponent">defineComponent</a></p>
+<h5>greasy</h5>
+<p><a href="#setImports">setImports</a>, <a href="#setRoot">setRoot</a>, <a href="#register">register</a>, <a href="#define">define</a>, <a href="#require">require</a>, <a href="#get">get</a>, <a href="#create">create</a>, <a href="#createMany">createMany</a>, <a href="#noConflict">noConflict</a></p>
 
-<h5>Greasy Component</h5>
+<h5>Component</h5>
 <p><a href="#Component.create">create</a></p>
 
-<h4>Greasy Constructor</h4>
-<dl>
-    <dt><a name="Greasy.create"></a>Greasy.create(arguments)</dt>
-        <dd>creates a Greasy object. Same as calling <pre class="inline sh_javascript">new Greasy(arguments)</pre></dd>
-</dl>
-
-<h4>Greasy Object</h4>
+<h4>greasy</h4>
 <dl>
     <dt><a name="setImports"></a>setImports(imports)</dt>
         <dd><dl>
@@ -190,17 +208,33 @@ greasy.setImports({
 });
 </pre>
             </p></dd>
+    
+        <dt><a name="setRoot"></a>setRoot(rootURL)</dt>
+        <dd><dl>
+            <dt>rootURL
+                <dd>URL which should be prepended to relative class URLs.</dd>
+            </dl>
+            <p>Example:
+<pre class="sh_javascript">
+// A root url may contain the domain
+greasy.setRoot("http://example.com/classes/");
+// Or not...
+greasy.setRoot("/classes/");
+// And it may be relative
+greasy.setRoot("classes/");
+</pre>
+            </p></dd>
 
-    <dt><a name="registerComponents"></a>registerComponents(components)</dt>
+    <dt><a name="register"></a>register(components)<div class="alias"><b>alias:</b> registerComponents</div></dt>
         <dd><dl>
             <dt>components</dt>
                 <dd>object of component-names to the filenames that they are defined in.</dd>
             </dl>
-            <p>Register mappings of component-names to the filenames that they are defined in.</p>
+            <p>Register mappings of component-names to the filenames that they are defined in. If root has been set, root will be prepended to relative URLs.</p>
             <p>Example:
 <pre class="sh_javascript">
 greasy.registerComponents({
-    "Mammal": "Mammel.js",
+    "Mammal": "Mammal.js",
     "Human": "Human.js"
 });</pre>
             </p></dd>
@@ -211,14 +245,51 @@ greasy.registerComponents({
             <p>Example:
 <pre class="sh_javascript">
 var Human = greasy.get("Human"),
-    mike = Human.create("Mike");
+    mike = new Human("Mike");
+</pre>
+            </p></dd>
+    
+    <dt><a name="create"></a>create(componentName[, arg1[, …[, argN] ])</dt>
+        <dd><dl>
+            <dt>componentName</dt>
+                <dd>name of component that will be instanciated</dd>
+            <dt>arg1, ..., argN</dt>
+                <dd>arguments to be given to each initialize</dd>
+            </dl>
+            <p>Create an instantiation of the given component name.</p>
+            <p>Example:
+<pre class="sh_javascript">
+// Create a human called Fred
+var fred = greasy.create("Human", "Fred");
+</pre>
+            </p></dd>
+    
+    <dt><a name="createMany"></a>createMany(componentName, count[, arg1[, …[, argN] ])</dt>
+    <dt>createMany(componentName, argumentsArray)</dt>
+        <dd><dl>
+            <dt>componentName</dt>
+                <dd>names of component that will be instanciated</dd>
+            <dt>count</dt>
+                <dd>number of instanciations to create</dd>
+            <dt>arg1, ..., argN</dt>
+                <dd>arguments to be given to initialize of each</dd>
+            <dt>argumentsArray</dt>
+                <dd>array of arguments arrays to be given to initialize of each respectively</dd>
+            </dl>
+            <p>Create many instantiations of the given component name.</p>
+            <p>Example:
+<pre class="sh_javascript">
+// Create some humans
+var humans = greasy.get("Human", [ ["Nicola"], ["Nymphadora"], ["Natalia"] ]);
+// Create 5 more humans, all called Bob
+var bobs = greasy.createMany("Human", 5, "Bob");
 </pre>
             </p></dd>
 
-    <dt><a name="requireComponents"></a>requireComponents(components, callback)</dt>
+    <dt><a name="require"></a>require(componentNames, callback)<div class="alias"><b>alias:</b> requireComponents</div></dt>
         <dd><dl>
-            <dt>components</dt>
-                <dd>array of componentNames of components that will be required within the callback</dd>
+            <dt>componentNames</dt>
+                <dd>array of names of components that will be required within the callback</dd>
             <dt>callback</dt>
                 <dd>function to be called once all components have loaded and executed</dd>
             </dl>
@@ -235,7 +306,7 @@ greasy.requireComponents(
 </pre></p>
 </dd>
 
-    <dt><a name="defineComponent"></a>defineComponent(componentName, options, callback)</dt>
+    <dt><a name="define"></a>define(componentName, options, callback)<div class="alias"><b>alias:</b> defineComponent</div></dt>
         <dd><dl>
             <dt>componentName<dt>
                 <dd>name of the component that is to be defined</dd>
@@ -252,35 +323,40 @@ greasy.requireComponents(
 
         <p>Example:
 <pre class="sh_javascript">
-greasy.defineComponent(
+greasy.define(
     "Human",
     {
-        // Get the `Thumb` component ready before proceeding
-        require: ["Thumb"],
+        // Get the Hat component ready before proceeding
+        require: ["Hat"],
 
-        // Extend on the component `Mammal`
+        // Extend on the component Mammal
         extend: "Mammal"
     },
     function (imports) {
         "use strict";
 
         var $ = imports.$,
-            greasy = imports.greasy,
-            // Get the Thumb component
-            Thumb = greasy.get("Thumb"),
-            // Make a couple of thumbs (last I checked, humans have two)
-            thumb1 = Thumb.create({ name: "Thumb 1" }),
-            thumb2 = Thumb.create({ name: "Thumb 2" });
+            greasy = imports.greasy;
 
         return {
-            greeting: function () {
-                return "Hello World!&lt;br /&gt;" + 
-                    thumb1.greeting() + "&lt;br /&gt;" + 
-                    thumb2.greeting();
+            name: undefined,
+            job: undefined,
+            hat: undefined,
+            
+            initialize: function (name, job, hatColour) {
+                this.name = name;
+                this.job = job;
+                this.hat = greasy.create("Hat", hatColour);
             },
-            draw: function () {
-                $(".animal").html(this.greeting());
-            }
+
+            sayHello: function () {
+                return "Hello! My name is " + this.name + 
+                    " and I am the " + this.job + ".";
+            },
+
+            aboutHat: function () {
+                return "I am wearing a hat. " + this.hat.describe();
+            },
         };
     }
 );
@@ -289,7 +365,7 @@ greasy.defineComponent(
 
         <p>It is possible to extend on existing functions. For example, we can extend on <a href="http://documentcloud.github.com/backbone/">Backbone</a>.View:
 <pre class="sh_javascript">
-greasy.defineComponent(
+greasy.define(
     "Human",
     {
         // Extend on the Backbone's View
@@ -309,13 +385,22 @@ greasy.defineComponent(
         </p>
     </dd>
 
+    <dt><a name="noConflict"></a>noConflict()</dt>
+        <dd>
+            <p>Do not use greasy global variable. Returns greasy object.</p>
+            <p>Example:
+<pre class="sh_javascript">
+var greasy = greasy.noConflict();
+</pre>
+            </p></dd>
+
 </dl>
 
 <h4>Component</h4>
 <dl>
-    <dt><a name="component.create"></a>create</dt>
+    <dt><a name="Component.create"></a>create</dt>
         <dd>
-        <p>creates a Greasy object. Same as calling <pre class="inline sh_javascript">new Greasy(arguments)</pre></p>
+        <p>creates a Greasy object. Same as calling <pre class="inline sh_javascript">new Component(arguments)</pre></p>
         <p>Example:
 <pre class="sh_javascript">
 var Human = greasy.get("Human"),
@@ -331,3 +416,5 @@ var Human = greasy.get("Human"),
 <p>greasy.js was developed by Peter West (FlamingTempura). It is released under the MIT license.</p>
 
 Get the source code on GitHub : <a href="http://github.com/FlamingTempura/greasy.js">FlamingTempura/greasy.js</a>
+</body>
+</html>

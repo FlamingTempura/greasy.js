@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+
+    <title>greasy.js demo :: Animal Farm</title>
+
+    <script type="text/javascript" src="lib/jquery.js"></script>
+    <script type="text/javascript" src="lib/underscore.js"></script>
+    <script type="text/javascript" src="lib/greasy.js"></script>
+
+    <script>
+    greasy.setRoot("classes/");
+
+    greasy.registerComponents({
+        "Mammal": "Mammal.js",
+        "Human": "Human.js",
+        "Cow": "Cow.js",
+        "Pig": "Pig.js",
+        "Hat": "Hat.js",
+    });
+
+    greasy.require([ "Human", "Pig", "Cow" ],
+        function () {
+            var output = "",
+                // Create our humans called Mike and Dora, they are a farmer and a milkmain and have yellow and blue hats.
+                mike = greasy.create("Human", "Mike", "farmer", "yellow"),
+                dora = greasy.create("Human", "Dora", "milkmaid", "blue"),
+
+                // Create our animals
+                cows = greasy.createMany("Cow", [
+                    [ "Daisy" ], [ "Dorris" ]
+                ]),
+
+                pigs = greasy.createMany("Pig", [
+                    [ "Maggio" ], [ "Mikey" ], [ "Markey" ]
+                ]);
+
+            output += "<h3>" + mike.name + "</h3>";
+            output += mike.sayHello() + "<br>";
+            output += "\t" + mike.aboutHat() + "<br>";
+
+            output += "<h3>" + dora.name + "</h3>";
+            output += dora.sayHello() + "<br>";
+            output += "\t" + dora.aboutHat() + "<br>";
+
+            output += "<h3>The animals</h3>";
+            // Tell each cow to say hello
+            _(cows).each(function (cow) {
+                output += cow.sayHello() + "<br>";
+            });
+            // Tell all the pigs too
+            _(pigs).each(function (cow) {
+                output += cow.sayHello() + "<br>";
+            });
+
+            // Output it all
+            jQuery(".output").html(output);
+        }
+    );
+    </script>
+</head>
+<body>
+    <div class="output"></div>
+</body>
+</html>
