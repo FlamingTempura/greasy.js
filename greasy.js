@@ -21,7 +21,7 @@
         // Keep greasy to old greasy is there is one
         previousGreasy = root.greasy,
 
-        // Make the greasy object. 
+        // Make the greasy object.
         greasy = root.greasy = {},
 
         defaultImports = {
@@ -120,14 +120,14 @@
 
         createMany: function (componentName, arg1) {
             log("Creating many components: ", componentName, this);
-            
+
             var count,
                 args,
                 argsArray = [];
-            
+
             if (_(arg1).isArray()) {
                 argsArray = arg1;
-                
+
             } else {
                 count = arg1;
                 args = Array.prototype.slice.call(arguments, 2);
@@ -138,7 +138,7 @@
             return _(argsArray).map(function (args) {
                 return greasy.create(componentName, args);
             });
-            
+
         },
 
         require: function (componentNames, callback) {
@@ -177,7 +177,7 @@
                         clearTimeout(failureTimeout);
                     });
 
-                    // Must use crossDomain (uses <script> tags) for console (Firebug, chrome etc) 
+                    // Must use crossDomain (uses <script> tags) for console (Firebug, chrome etc)
                     // to work
                     $.ajax({
                         crossDomain: true,
@@ -191,7 +191,10 @@
 
             // Once all components have been loaded, execute the callback
             $.when.apply(undefined, deferredUntilAllRequiredComponentsDefined).then(function () {
-                var result = callback.call(undefined, greasy.imports);
+                var result;
+                if (callback) {
+                    result = callback.call(undefined, greasy.imports);
+                }
                 deferredUntilReady.resolve(result);
             });
 
