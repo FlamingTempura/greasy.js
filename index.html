@@ -290,13 +290,14 @@ var bobs = greasy.createMany("Human", 5, "Bob");
 </pre>
             </p></dd>
 
-    <dt><a name="require"></a>require(componentNames, callback)<div class="alias"><b>alias:</b> requireComponents</div></dt>
+    <dt><a name="require"></a>require(componentNames[, callback])<div class="alias"><b>alias:</b> requireComponents</div></dt>
         <dd><dl>
             <dt>componentNames</dt>
                 <dd>array of names of components that will be required within the callback</dd>
             <dt>callback</dt>
                 <dd>function to be called once all components have loaded and executed</dd>
             </dl>
+        <p>Returns a jQuery Deferred object that is resolved when all required components have been loaded.</p>
         <p>Example:
 <pre class="sh_javascript">
 greasy.requireComponents(
