@@ -10,7 +10,7 @@ components, which may be dependant on other components. This allows:
 *   Mitigating the use of large multi-purpose JavaScript files - instead you
     can keep each part (component) of your application in separate files,
 
-*   Reducing the need for HTML <script> tags - JavaScript components are
+*   Reducing the need for HTML script tags - JavaScript components are
     loaded dynamically,
 
 *   Facilitating lazy-loading - only load components if and when they are
